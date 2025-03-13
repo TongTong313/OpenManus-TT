@@ -18,19 +18,21 @@ from app.schema import Message
 class LLM:
     _instances: Dict[str, "LLM"] = {}
 
-    def __new__(
-        cls, config_name: str = "default", llm_config: Optional[LLMSettings] = None
-    ):
+    # 单例模式，避免重复创建LLM实例
+    def __new__(cls,
+                config_name: str = "default",
+                llm_config: Optional[LLMSettings] = None):
         if config_name not in cls._instances:
             instance = super().__new__(cls)
             instance.__init__(config_name, llm_config)
             cls._instances[config_name] = instance
         return cls._instances[config_name]
 
-    def __init__(
-        self, config_name: str = "default", llm_config: Optional[LLMSettings] = None
-    ):
-        if not hasattr(self, "client"):  # Only initialize if not already initialized
+    def __init__(self,
+                 config_name: str = "default",
+                 llm_config: Optional[LLMSettings] = None):
+        if not hasattr(self,
+                       "client"):  # Only initialize if not already initialized
             llm_config = llm_config or config.llm
             llm_config = llm_config.get(config_name, llm_config["default"])
             self.model = llm_config.model
@@ -47,7 +49,8 @@ class LLM:
                     api_version=self.api_version,
                 )
             else:
-                self.client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
+                self.client = AsyncOpenAI(api_key=self.api_key,
+                                          base_url=self.base_url)
 
     @staticmethod
     def format_messages(messages: List[Union[dict, Message]]) -> List[dict]:
@@ -92,8 +95,7 @@ class LLM:
                 raise ValueError(f"Invalid role: {msg['role']}")
             if "content" not in msg and "tool_calls" not in msg:
                 raise ValueError(
-                    "Message must contain either 'content' or 'tool_calls'"
-                )
+                    "Message must contain either 'content' or 'tool_calls'")
 
         return formatted_messages
 
@@ -142,7 +144,8 @@ class LLM:
                     temperature=temperature or self.temperature,
                     stream=False,
                 )
-                if not response.choices or not response.choices[0].message.content:
+                if not response.choices or not response.choices[
+                        0].message.content:
                     raise ValueError("Empty or invalid response from LLM")
                 return response.choices[0].message.content
 
@@ -227,7 +230,8 @@ class LLM:
             if tools:
                 for tool in tools:
                     if not isinstance(tool, dict) or "type" not in tool:
-                        raise ValueError("Each tool must be a dict with 'type' field")
+                        raise ValueError(
+                            "Each tool must be a dict with 'type' field")
 
             # Set up the completion request
             response = await self.client.chat.completions.create(
@@ -255,7 +259,8 @@ class LLM:
             if isinstance(oe, AuthenticationError):
                 logger.error("Authentication failed. Check API key.")
             elif isinstance(oe, RateLimitError):
-                logger.error("Rate limit exceeded. Consider increasing retry attempts.")
+                logger.error(
+                    "Rate limit exceeded. Consider increasing retry attempts.")
             elif isinstance(oe, APIError):
                 logger.error(f"API error: {oe}")
             raise
