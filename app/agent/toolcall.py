@@ -9,7 +9,6 @@ from app.prompt.toolcall import NEXT_STEP_PROMPT, SYSTEM_PROMPT
 from app.schema import AgentState, Message, ToolCall
 from app.tool import CreateChatCompletion, Terminate, ToolCollection
 
-
 TOOL_CALL_REQUIRED = "Tool calls required but none provided"
 
 
@@ -22,11 +21,14 @@ class ToolCallAgent(ReActAgent):
     system_prompt: str = SYSTEM_PROMPT
     next_step_prompt: str = NEXT_STEP_PROMPT
 
-    available_tools: ToolCollection = ToolCollection(
-        CreateChatCompletion(), Terminate()
-    )
+    # 这里包含了两个工具：
+    # 1. CreateChatCompletion()：创建一个聊天完成
+    # 2. Terminate()：终止程序
+    available_tools: ToolCollection = ToolCollection(CreateChatCompletion(),
+                                                     Terminate())
     tool_choices: Literal["none", "auto", "required"] = "auto"
-    special_tool_names: List[str] = Field(default_factory=lambda: [Terminate().name])
+    special_tool_names: List[str] = Field(
+        default_factory=lambda: [Terminate().name])
 
     tool_calls: List[ToolCall] = Field(default_factory=list)
 
@@ -42,8 +44,7 @@ class ToolCallAgent(ReActAgent):
         response = await self.llm.ask_tool(
             messages=self.messages,
             system_msgs=[Message.system_message(self.system_prompt)]
-            if self.system_prompt
-            else None,
+            if self.system_prompt else None,
             tools=self.available_tools.to_params(),
             tool_choice=self.tool_choices,
         )
@@ -67,18 +68,16 @@ class ToolCallAgent(ReActAgent):
                         f"🤔 Hmm, {self.name} tried to use tools when they weren't available!"
                     )
                 if response.content:
-                    self.memory.add_message(Message.assistant_message(response.content))
+                    self.memory.add_message(
+                        Message.assistant_message(response.content))
                     return True
                 return False
 
             # Create and add assistant message
-            assistant_msg = (
-                Message.from_tool_calls(
-                    content=response.content, tool_calls=self.tool_calls
-                )
-                if self.tool_calls
-                else Message.assistant_message(response.content)
-            )
+            assistant_msg = (Message.from_tool_calls(
+                content=response.content, tool_calls=self.tool_calls)
+                             if self.tool_calls else Message.assistant_message(
+                                 response.content))
             self.memory.add_message(assistant_msg)
 
             if self.tool_choices == "required" and not self.tool_calls:
@@ -90,12 +89,11 @@ class ToolCallAgent(ReActAgent):
 
             return bool(self.tool_calls)
         except Exception as e:
-            logger.error(f"🚨 Oops! The {self.name}'s thinking process hit a snag: {e}")
+            logger.error(
+                f"🚨 Oops! The {self.name}'s thinking process hit a snag: {e}")
             self.memory.add_message(
                 Message.assistant_message(
-                    f"Error encountered while processing: {str(e)}"
-                )
-            )
+                    f"Error encountered while processing: {str(e)}"))
             return False
 
     async def act(self) -> str:
@@ -105,7 +103,8 @@ class ToolCallAgent(ReActAgent):
                 raise ValueError(TOOL_CALL_REQUIRED)
 
             # Return last message content if no tool calls
-            return self.messages[-1].content or "No content or commands to execute"
+            return self.messages[
+                -1].content or "No content or commands to execute"
 
         results = []
         for command in self.tool_calls:
@@ -115,9 +114,9 @@ class ToolCallAgent(ReActAgent):
             )
 
             # Add tool response to memory
-            tool_msg = Message.tool_message(
-                content=result, tool_call_id=command.id, name=command.function.name
-            )
+            tool_msg = Message.tool_message(content=result,
+                                            tool_call_id=command.id,
+                                            name=command.function.name)
             self.memory.add_message(tool_msg)
             results.append(result)
 
@@ -138,14 +137,13 @@ class ToolCallAgent(ReActAgent):
 
             # Execute the tool
             logger.info(f"🔧 Activating tool: '{name}'...")
-            result = await self.available_tools.execute(name=name, tool_input=args)
+            result = await self.available_tools.execute(name=name,
+                                                        tool_input=args)
 
             # Format result for display
             observation = (
                 f"Observed output of cmd `{name}` executed:\n{str(result)}"
-                if result
-                else f"Cmd `{name}` completed with no output"
-            )
+                if result else f"Cmd `{name}` completed with no output")
 
             # Handle special tools like `finish`
             await self._handle_special_tool(name=name, result=result)

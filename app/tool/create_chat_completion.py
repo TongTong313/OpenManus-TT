@@ -8,8 +8,7 @@ from app.tool import BaseTool
 class CreateChatCompletion(BaseTool):
     name: str = "create_chat_completion"
     description: str = (
-        "Creates a structured completion with specified output formatting."
-    )
+        "Creates a structured completion with specified output formatting.")
 
     # Type mapping for JSON schema
     type_mapping: dict = {
@@ -31,21 +30,25 @@ class CreateChatCompletion(BaseTool):
 
     def _build_parameters(self) -> dict:
         """Build parameters schema based on response type."""
+        # 如果response_type是str类型，返回一个dict
         if self.response_type == str:
             return {
                 "type": "object",
                 "properties": {
                     "response": {
-                        "type": "string",
-                        "description": "The response text that should be delivered to the user.",
+                        "type":
+                        "string",
+                        "description":
+                        "The response text that should be delivered to the user.",
                     },
                 },
                 "required": self.required,
             }
 
+        # 如果response_type是BaseModel类型，返回一个dict
         if isinstance(self.response_type, type) and issubclass(
-            self.response_type, BaseModel
-        ):
+                self.response_type, BaseModel):
+            # 获取BaseModel的json schema
             schema = self.response_type.model_json_schema()
             return {
                 "type": "object",
@@ -53,6 +56,7 @@ class CreateChatCompletion(BaseTool):
                 "required": schema.get("required", self.required),
             }
 
+        # 如果response_type是其他类型，调用_create_type_schema方法
         return self._create_type_schema(self.response_type)
 
     def _create_type_schema(self, type_hint: Type) -> dict:
@@ -67,7 +71,8 @@ class CreateChatCompletion(BaseTool):
                 "properties": {
                     "response": {
                         "type": self.type_mapping.get(type_hint, "string"),
-                        "description": f"Response of type {type_hint.__name__}",
+                        "description":
+                        f"Response of type {type_hint.__name__}",
                     }
                 },
                 "required": self.required,
@@ -95,7 +100,8 @@ class CreateChatCompletion(BaseTool):
                 "properties": {
                     "response": {
                         "type": "object",
-                        "additionalProperties": self._get_type_info(value_type),
+                        "additionalProperties":
+                        self._get_type_info(value_type),
                     }
                 },
                 "required": self.required,
@@ -113,8 +119,10 @@ class CreateChatCompletion(BaseTool):
             return type_hint.model_json_schema()
 
         return {
-            "type": self.type_mapping.get(type_hint, "string"),
-            "description": f"Value of type {getattr(type_hint, '__name__', 'any')}",
+            "type":
+            self.type_mapping.get(type_hint, "string"),
+            "description":
+            f"Value of type {getattr(type_hint, '__name__', 'any')}",
         }
 
     def _create_union_schema(self, types: tuple) -> dict:
@@ -122,7 +130,9 @@ class CreateChatCompletion(BaseTool):
         return {
             "type": "object",
             "properties": {
-                "response": {"anyOf": [self._get_type_info(t) for t in types]}
+                "response": {
+                    "anyOf": [self._get_type_info(t) for t in types]
+                }
             },
             "required": self.required,
         }
@@ -156,8 +166,7 @@ class CreateChatCompletion(BaseTool):
             return result
 
         if isinstance(self.response_type, type) and issubclass(
-            self.response_type, BaseModel
-        ):
+                self.response_type, BaseModel):
             return self.response_type(**kwargs)
 
         if get_origin(self.response_type) in (list, dict):

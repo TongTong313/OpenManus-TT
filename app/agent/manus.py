@@ -20,17 +20,20 @@ class Manus(ToolCallAgent):
 
     name: str = "Manus"
     description: str = (
-        "A versatile agent that can solve various tasks using multiple tools"
-    )
+        "A versatile agent that can solve various tasks using multiple tools")
 
     system_prompt: str = SYSTEM_PROMPT
     next_step_prompt: str = NEXT_STEP_PROMPT
 
     # Add general-purpose tools to the tool collection
+    # 这里包含了五个工具（重写了ToolCallAgent的available_tools）：
+    # 1. PythonExecute()：执行Python代码
+    # 2. GoogleSearch()：执行Google搜索
+    # 3. BrowserUseTool()：执行浏览器操作
+    # 4. FileSaver()：保存文件
+    # 5. Terminate()：终止程序
     available_tools: ToolCollection = Field(
-        default_factory=lambda: ToolCollection(
-            PythonExecute(), GoogleSearch(), BrowserUseTool(), FileSaver(), Terminate()
-        )
-    )
+        default_factory=lambda: ToolCollection(PythonExecute(), GoogleSearch(
+        ), BrowserUseTool(), FileSaver(), Terminate()))
 
     max_steps: int = 20
