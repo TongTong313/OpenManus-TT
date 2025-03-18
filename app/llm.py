@@ -16,9 +16,11 @@ from app.schema import Message
 
 
 class LLM:
+    # _instances是一个字典，key是config_name，value是LLM实例
+    # 作用：避免重复创建LLM实例
     _instances: Dict[str, "LLM"] = {}
 
-    # 单例模式，避免重复创建LLM实例
+    # __new__方法：创建一个LLM实例，避免重复创建相同的LLM实例
     def __new__(cls,
                 config_name: str = "default",
                 llm_config: Optional[LLMSettings] = None):
@@ -74,6 +76,16 @@ class LLM:
             ...     Message.user_message("How are you?")
             ... ]
             >>> formatted = LLM.format_messages(msgs)
+        
+        OpenAI message规范示例：
+        {
+            "role": "system",
+            "content": "You are a helpful assistant"
+        }
+        {
+            "role": "user",
+            "content": "Hello"
+        }
         """
         formatted_messages = []
 

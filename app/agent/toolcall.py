@@ -26,18 +26,24 @@ class ToolCallAgent(ReActAgent):
     # 2. Terminate()：终止程序
     available_tools: ToolCollection = ToolCollection(CreateChatCompletion(),
                                                      Terminate())
+    # 工具选择模式
     tool_choices: Literal["none", "auto", "required"] = "auto"
+    # 特殊工具名称
     special_tool_names: List[str] = Field(
         default_factory=lambda: [Terminate().name])
 
+    # 工具调用列表
     tool_calls: List[ToolCall] = Field(default_factory=list)
 
+    # 最大步骤数
     max_steps: int = 30
 
     async def think(self) -> bool:
         """Process current state and decide next actions using tools"""
         if self.next_step_prompt:
+            # 生成一个user_message
             user_msg = Message.user_message(self.next_step_prompt)
+            # 把user_msg添加到messages列表中
             self.messages += [user_msg]
 
         # Get response with tool options

@@ -57,11 +57,14 @@ class Message(BaseModel):
 
     def to_dict(self) -> dict:
         """Convert message to dictionary format"""
+        # 先创建一个字典变量
         message = {"role": self.role}
         if self.content is not None:
             message["content"] = self.content
         if self.tool_calls is not None:
-            message["tool_calls"] = [tool_call.dict() for tool_call in self.tool_calls]
+            message["tool_calls"] = [
+                tool_call.dict() for tool_call in self.tool_calls
+            ]
         if self.name is not None:
             message["name"] = self.name
         if self.tool_call_id is not None:
@@ -86,28 +89,37 @@ class Message(BaseModel):
     @classmethod
     def tool_message(cls, content: str, name, tool_call_id: str) -> "Message":
         """Create a tool message"""
-        return cls(role="tool", content=content, name=name, tool_call_id=tool_call_id)
+        return cls(role="tool",
+                   content=content,
+                   name=name,
+                   tool_call_id=tool_call_id)
 
     @classmethod
-    def from_tool_calls(
-        cls, tool_calls: List[Any], content: Union[str, List[str]] = "", **kwargs
-    ):
+    def from_tool_calls(cls,
+                        tool_calls: List[Any],
+                        content: Union[str, List[str]] = "",
+                        **kwargs):
         """Create ToolCallsMessage from raw tool calls.
 
         Args:
             tool_calls: Raw tool calls from LLM
             content: Optional message content
         """
-        formatted_calls = [
-            {"id": call.id, "function": call.function.model_dump(), "type": "function"}
-            for call in tool_calls
-        ]
-        return cls(
-            role="assistant", content=content, tool_calls=formatted_calls, **kwargs
-        )
+        formatted_calls = [{
+            "id": call.id,
+            "function": call.function.model_dump(),
+            "type": "function"
+        } for call in tool_calls]
+        return cls(role="assistant",
+                   content=content,
+                   tool_calls=formatted_calls,
+                   **kwargs)
 
 
 class Memory(BaseModel):
+    # 记忆模块，把message以list形式管理起来
+
+    # messages就是一个列表
     messages: List[Message] = Field(default_factory=list)
     max_messages: int = Field(default=100)
 
@@ -116,7 +128,8 @@ class Memory(BaseModel):
         self.messages.append(message)
         # Optional: Implement message limit
         if len(self.messages) > self.max_messages:
-            self.messages = self.messages[-self.max_messages :]
+            # 取最后max_messages个message，保证message不超过最大数目
+            self.messages = self.messages[-self.max_messages:]
 
     def add_messages(self, messages: List[Message]) -> None:
         """Add multiple messages to memory"""
@@ -124,6 +137,7 @@ class Memory(BaseModel):
 
     def clear(self) -> None:
         """Clear all messages"""
+        # clear函数作用：清空list
         self.messages.clear()
 
     def get_recent_messages(self, n: int) -> List[Message]:
