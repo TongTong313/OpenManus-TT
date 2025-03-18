@@ -68,8 +68,10 @@ class Message(BaseModel):
 
 
 if __name__ == "__main__":
-    user = User(name="John", age=20, tool_choices="auto")
-    print(user.model_json_schema())
+    # user = User(name="John", age=20, tool_choices="auto")
+    # print(user.model_json_schema())
+    llm = LLM()
+    print(llm)
 
     msg1 = Message(role="user", content="Hello, world!")
     msg2 = Message(role="assistant", content="Hello, too!")

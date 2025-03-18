@@ -42,6 +42,11 @@ class ToolCallAgent(ReActAgent):
         """Process current state and decide next actions using tools"""
         if self.next_step_prompt:
             # 生成一个user_message
+            # user_msg的形式：
+            # {
+            #     "role": "user",
+            #     "content": self.next_step_prompt
+            # }
             user_msg = Message.user_message(self.next_step_prompt)
             # 把user_msg添加到messages列表中
             self.messages += [user_msg]
